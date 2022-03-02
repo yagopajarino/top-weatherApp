@@ -2,37 +2,60 @@
 import './style.css'
 import preIcon from './barometer.png'
 import humIcon from './humidity.png'
+import triangle from './triangle.svg'
 
 
 const apiKey = '4ed3d6272da9d1cf76394633f6ee93d1'
 const weatherEndpoint = 'https://api.openweathermap.org/data/2.5/weather?'
 const forecastEnpoint = 'https://api.openweathermap.org/data/2.5/onecall?'
 const iconEndpoint = 'https://openweathermap.org/img/wn/'
-const city = 'London'
+let city = 'Buenos Aires, AR'
 const units = 'metric' // imperial, metric
 const tempUnitSymbol = units === 'metric' ? 'C' : 'F'
 const windUnitSymbol = units === 'metric' ? 'm/s' : 'mph'
+const error = document.querySelector('#errorMsg')
+
+const weatherBtn = document.querySelector('#getWeaterButton')
+weatherBtn.addEventListener('click', changeCity)
+
+const cityInput = document.querySelector('#city')
+cityInput.addEventListener('click', () => {cityInput.select()}) 
 
 // Helper functions
-function parseDt(dt){
+function parseDt(dt, deltaHours){
     const date = new Date(dt * 1000)
     const daysArr = ['sun','mon', 'tue', 'wed', 'thu', 'fri', 'sat']
     const monthsArr = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
     const dayStr = daysArr[date.getDay()]
     const monthStr = monthsArr[date.getMonth()]
     const day = date.getUTCDate()
-    const time = `${date.getHours().toString()  }:${  date.getMinutes().toString()}`
+    const hours = date.getUTCHours() + deltaHours
+    const time = `${hours.toString()  }:${  date.getMinutes().toString()}`
     
     const dateAndTime = `${monthStr.charAt(0).toUpperCase() + monthStr.slice(1)} ${day}, ${time}`
     const dateStr = `${dayStr.charAt(0).toUpperCase() + dayStr.slice(1)}, ${monthStr.charAt(0).toUpperCase() + monthStr.slice(1)} ${day}`
     return [dateAndTime, dateStr]
 }
 
+function changeCity() {
+    city = cityInput.value
+    getWeatherData().then((coords) => {
+        getForecast(coords[0], coords[1])
+    }).catch(() => {
+        error.textContent = 'City not found, try again'
+    })   
+}
+
+document.addEventListener('load', getWeatherData().then((coords) => {
+    getForecast(coords[0], coords[1])
+}) )
+
 // -------------------------
 
 async function getWeatherData(){
     const request = await fetch(`${weatherEndpoint}q=${city}&units=${units}&APPID=${apiKey}`)
     const data = await request.json()
+    console.log(data)
     const description = data.weather[0].description
     const icon = data.weather[0].icon
     const iconUrl = `${iconEndpoint + icon  }@2x.png`
@@ -59,7 +82,8 @@ async function getWeatherData(){
 
     // Datetime
     const datetime = data.dt
-    const date = parseDt(datetime)[0]
+    const timezoneShift = data.timezone/3600
+    const date = parseDt(datetime, timezoneShift)[0]
 
     // City Data
     const cityName = data.name
@@ -70,6 +94,9 @@ async function getWeatherData(){
     // Agregar al DOM
     // Datos Principales
     const divPrincipales = document.querySelector('.datosPrincipales')
+    while (divPrincipales.firstChild) {
+        divPrincipales.firstChild.remove()
+    }
 
         // Fecha
     const dateSpan = document.createElement('span')
@@ -80,7 +107,8 @@ async function getWeatherData(){
     cityH1.textContent = `${cityName  }, ${  country}`
 
         // Icono y temperatura
-    const pDiv = document.querySelector('.principalesCont')
+    const pDiv = document.createElement('div')
+    pDiv.classList.toggle('principalesCont')
     const iconImg = document.createElement('img')
     iconImg.src = iconUrl
     pDiv.appendChild(iconImg)
@@ -101,6 +129,9 @@ async function getWeatherData(){
 
     // Datos secundarios
     const divSecundarios = document.querySelector('.datosSecundarios')
+    while (divSecundarios.firstChild) {
+        divSecundarios.firstChild.remove()
+    }
     
         // Presion
     const presText = document.createElement('span')
@@ -121,9 +152,16 @@ async function getWeatherData(){
         // Viento   
     const winDiv = document.createElement('div')
     winDiv.classList.toggle('datosViento')
+    const windDir = document.createElement('img')
+    windDir.src = triangle
+    windDir.classList.toggle('windIcon')
+    windDir.style.transform = `rotate(${-windDirection}deg)`
     const vel = document.createElement('span')
+    vel.style.paddingRight = '0.5rem'
     vel.textContent = `Wind ${windSpeed} ${windUnitSymbol}`
+
     winDiv.appendChild(vel)
+    winDiv.appendChild(windDir)
 
         // Temperatura
     const tempDiv = document.createElement('div')
@@ -151,7 +189,13 @@ async function getForecast(lon, lat){
     const request = await fetch(`${forecastEnpoint}lat=${lat}&lon=${lon}&exclude=current,minutely,hourly,alerts&units=${units}&APPID=${apiKey}`)
     const data = await request.json()
 
-    const daily = data.daily
+    const container = document.querySelector('.forecast')
+    while (container.firstChild) {
+        container.firstChild.remove()
+    }
+
+    const daily = data.daily.slice(1)
+
     daily.forEach(day => {
         const dateTime = day.dt
         const date = parseDt(dateTime)[1]
@@ -165,7 +209,7 @@ async function getForecast(lon, lat){
         const iconUrl = `${iconEndpoint + weatherIcon  }.png`
 
         // DOM
-        const container = document.querySelector('.forecast')
+    
         const div = document.createElement('div')
         div.classList = 'tile'
         
@@ -211,13 +255,10 @@ async function getForecast(lon, lat){
         div.appendChild(dateSpan)
         div.appendChild(iconImg)
         div.appendChild(descr)
-        // div.appendChild(table)
         div.appendChild(hpDiv)
         container.appendChild(div)
+        error.textContent = ''
     });
 }
 
-getWeatherData().then((coords) => {
-    getForecast(coords[0], coords[1])
-})
 

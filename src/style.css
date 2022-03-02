@@ -69,3 +69,13 @@ div {
   display: flex;
   flex-direction: column;
 }
+
+.windIcon {
+  width: 15px;
+  height: auto;
+}
+
+.datosViento {
+  display: flex;
+  align-items: center;
+}
