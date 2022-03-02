@@ -21,8 +21,6 @@ function parseDt(dt){
     const dayStr = daysArr[date.getDay()]
     const monthStr = monthsArr[date.getMonth()]
     const day = date.getUTCDate()
-    const month = date.getMonth()
-    const year = date.getFullYear()
     const time = `${date.getHours().toString()  }:${  date.getMinutes().toString()}`
     
     const dateAndTime = `${monthStr.charAt(0).toUpperCase() + monthStr.slice(1)} ${day}, ${time}`
@@ -35,7 +33,6 @@ function parseDt(dt){
 async function getWeatherData(){
     const request = await fetch(`${weatherEndpoint}q=${city}&units=${units}&APPID=${apiKey}`)
     const data = await request.json()
-    const main = data.weather[0].main
     const description = data.weather[0].description
     const icon = data.weather[0].icon
     const iconUrl = `${iconEndpoint + icon  }@2x.png`
