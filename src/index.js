@@ -1,8 +1,11 @@
+/* eslint-disable no-use-before-define */
 /* eslint-disable prefer-destructuring */
 import './style.css'
 import preIcon from './barometer.png'
 import humIcon from './humidity.png'
 import triangle from './triangle.svg'
+import tabIcon from './nublado.png'
+import temperatureIcon from './temp.png'
 
 
 const apiKey = '4ed3d6272da9d1cf76394633f6ee93d1'
@@ -10,16 +13,35 @@ const weatherEndpoint = 'https://api.openweathermap.org/data/2.5/weather?'
 const forecastEnpoint = 'https://api.openweathermap.org/data/2.5/onecall?'
 const iconEndpoint = 'https://openweathermap.org/img/wn/'
 let city = 'Buenos Aires, AR'
-const units = 'metric' // imperial, metric
-const tempUnitSymbol = units === 'metric' ? 'C' : 'F'
-const windUnitSymbol = units === 'metric' ? 'm/s' : 'mph'
+let units = 'metric' // imperial, metric
 const error = document.querySelector('#errorMsg')
 
 const weatherBtn = document.querySelector('#getWeaterButton')
 weatherBtn.addEventListener('click', changeCity)
 
 const cityInput = document.querySelector('#city')
-cityInput.addEventListener('click', () => {cityInput.select()}) 
+cityInput.addEventListener('click', () => {cityInput.select()})
+
+let options = document.querySelectorAll('.option')
+options = Array.from(options)
+options.forEach(option => {
+    option.addEventListener('click', () => {
+        units = option.id
+        options.forEach(op => {
+            if(op.id === units) {
+                op.classList.add('selected')        
+            }
+            else{op.classList.remove('selected')}
+        });
+        option.classList.add('selected')
+        getWeatherData().then((coords) => {
+            getForecast(coords[0], coords[1])
+        })
+    })
+});
+
+const iconLink = document.querySelector('#icon')
+iconLink.href = tabIcon
 
 // Helper functions
 function parseDt(dt, deltaHours){
@@ -29,8 +51,8 @@ function parseDt(dt, deltaHours){
     const dayStr = daysArr[date.getDay()]
     const monthStr = monthsArr[date.getMonth()]
     const day = date.getUTCDate()
-    const hours = date.getUTCHours() + deltaHours
-    const time = `${hours.toString()  }:${  date.getMinutes().toString()}`
+    const hours = (date.getUTCHours() + deltaHours) % 24
+    const time = `${hours.toString().padStart(2)  }:${  date.getMinutes().toString().padStart(2,'0')}`
     
     const dateAndTime = `${monthStr.charAt(0).toUpperCase() + monthStr.slice(1)} ${day}, ${time}`
     const dateStr = `${dayStr.charAt(0).toUpperCase() + dayStr.slice(1)}, ${monthStr.charAt(0).toUpperCase() + monthStr.slice(1)} ${day}`
@@ -43,6 +65,7 @@ function changeCity() {
         getForecast(coords[0], coords[1])
     }).catch(() => {
         error.textContent = 'City not found, try again'
+        error.classList.add('active')
     })   
 }
 
@@ -55,10 +78,11 @@ document.addEventListener('load', getWeatherData().then((coords) => {
 async function getWeatherData(){
     const request = await fetch(`${weatherEndpoint}q=${city}&units=${units}&APPID=${apiKey}`)
     const data = await request.json()
-    console.log(data)
     const description = data.weather[0].description
     const icon = data.weather[0].icon
     const iconUrl = `${iconEndpoint + icon  }@2x.png`
+    const tempUnitSymbol = units === 'metric' ? 'C' : 'F'
+    const windUnitSymbol = units === 'metric' ? 'm/s' : 'mph'
     
     // Datos temperatura
     const temp = data.main.temp
@@ -104,6 +128,7 @@ async function getWeatherData(){
 
         // Ciudad, CC
     const cityH1 = document.createElement('h2')
+    cityH1.classList.toggle('cityTitle')
     cityH1.textContent = `${cityName  }, ${  country}`
 
         // Icono y temperatura
@@ -117,7 +142,7 @@ async function getWeatherData(){
     pDiv.appendChild(tempSpan)
 
         // Descripción
-    const descrSpan = document.createElement('span')
+    const descrSpan = document.createElement('div')
     descrSpan.id = 'weatherDescription'
     descrSpan.textContent = description.charAt(0).toUpperCase() + description.slice(1)
 
@@ -166,12 +191,13 @@ async function getWeatherData(){
         // Temperatura
     const tempDiv = document.createElement('div')
     tempDiv.classList.toggle('datosTemperatura')
-    const flike = document.createElement('span')
-    flike.textContent = `Feels like ${Math.round(sensTerm)}º${tempUnitSymbol}`
-    tempDiv.appendChild(flike)
     const tempRange = document.createElement('span')
     tempRange.textContent = `Temperature ${Math.round(tempMin)} / ${Math.round(tempMax)} º${tempUnitSymbol}`
     tempDiv.appendChild(tempRange)
+    const flike = document.createElement('span')
+    flike.textContent = `Feels like ${Math.round(sensTerm)}º${tempUnitSymbol}`
+    tempDiv.appendChild(flike)
+    
 
 
         // Appends al DOM
@@ -188,6 +214,7 @@ async function getWeatherData(){
 async function getForecast(lon, lat){
     const request = await fetch(`${forecastEnpoint}lat=${lat}&lon=${lon}&exclude=current,minutely,hourly,alerts&units=${units}&APPID=${apiKey}`)
     const data = await request.json()
+    const tempUnitSymbol = units === 'metric' ? 'C' : 'F'
 
     const container = document.querySelector('.forecast')
     while (container.firstChild) {
@@ -209,7 +236,6 @@ async function getForecast(lon, lat){
         const iconUrl = `${iconEndpoint + weatherIcon  }.png`
 
         // DOM
-    
         const div = document.createElement('div')
         div.classList = 'tile'
         
@@ -228,10 +254,12 @@ async function getForecast(lon, lat){
         // Temperature, pressure and humidity
         const hpDiv = document.createElement('div')
         hpDiv.classList.toggle('atmosferic')
-        const min = document.createElement('span')
-        min.textContent = `Min: ${Math.round(minTemp)}º${tempUnitSymbol}`
-        const max = document.createElement('span')
-        max.textContent = `Max: ${Math.round(maxTemp)}º${tempUnitSymbol}`
+        const temp = document.createElement('span')
+        const tempIcon = document.createElement('img')
+        tempIcon.src = temperatureIcon
+        tempIcon.classList.toggle('icon')
+        temp.textContent = ` ${Math.round(minTemp)} - ${Math.round(maxTemp)} º${tempUnitSymbol}`
+        temp.insertBefore(tempIcon, temp.firstChild);
         const hum = document.createElement('span')
         const hImg = document.createElement('img')
         hImg.classList.toggle('icon')
@@ -246,8 +274,7 @@ async function getForecast(lon, lat){
         pre.insertBefore(pImg, pre.firstChild);
         
 
-        hpDiv.appendChild(min)
-        hpDiv.appendChild(max)
+        hpDiv.appendChild(temp)
         hpDiv.appendChild(hum)
         hpDiv.appendChild(pre)
 
@@ -258,6 +285,7 @@ async function getForecast(lon, lat){
         div.appendChild(hpDiv)
         container.appendChild(div)
         error.textContent = ''
+        error.classList.remove('active')
     });
 }
 

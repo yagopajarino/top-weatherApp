@@ -1,20 +1,18 @@
 html {
-  font-size: 16px;
+  font-size: 18px;
 }
 
 body {
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Roboto", sans-serif;
   margin: 0;
   padding: 0 15%;
-}
-
-div {
-  border: 1px solid red;
+  background-color: #f8fcff;
 }
 
 .container {
   display: flex;
   justify-content: center;
+  flex-wrap: wrap;
 }
 
 .cont {
@@ -22,10 +20,21 @@ div {
   padding: 1rem 2rem;
 }
 
+.datosPrincipales,
+.datosSecundarios,
+.tile {
+  box-shadow: 3px 5px 14px -4px #a1a1a1a8;
+  background-color: #ffffff;
+}
+
 .datosSecundarios {
   display: flex;
   flex-direction: column;
   justify-content: space-around;
+}
+
+.datosSecundarios > * {
+  padding: 0.25rem 0;
 }
 
 .forecast {
@@ -37,10 +46,13 @@ div {
 .tile {
   padding: 1rem;
   margin: 1rem 0.5rem;
-  max-width: 12%;
+  width: 10%;
+  min-width: 120px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  align-content: center;
+  justify-content: center;
 }
 
 .atmosferic {
@@ -53,7 +65,7 @@ div {
 }
 
 .icon {
-  width: 15px;
+  width: 16px;
 }
 
 .principalesCont {
@@ -78,4 +90,91 @@ div {
 .datosViento {
   display: flex;
   align-items: center;
+}
+
+.sectionTitle {
+  margin: 1rem;
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.searchBar {
+  padding: 0.25rem 0;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  background-color: #dddddd;
+}
+
+.searchBar > input,
+button {
+  margin: 0.5rem;
+  padding: 0.5rem;
+}
+
+.cityInput,
+#getWeaterButton {
+  font-size: 1rem;
+  border: none;
+}
+
+#getWeaterButton:hover {
+  background-color: #e98d73;
+}
+
+input:focus-visible {
+  outline-width: 0px;
+}
+
+.cityTitle {
+  margin-top: 0px;
+}
+
+footer {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+}
+
+.switch-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  margin-left: 2rem;
+}
+.option {
+  padding: 0.5rem 1rem;
+  margin: 0.25rem;
+  background-color: #777777;
+  transition: background-color 0.25s ease-in-out;
+}
+
+.selected {
+  background-color: #f5f5f5;
+}
+
+#weatherDescription {
+  text-align: center;
+}
+
+a {
+  text-decoration: underline;
+  color: inherit;
+}
+
+a:hover {
+  text-decoration: underline;
+  color: #ec6e4c;
+}
+
+#errorMsg {
+  text-align: center;
+  background-color: #ff8686;
+}
+
+.active {
+  padding: 0.5rem;
 }
